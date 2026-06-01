@@ -26,7 +26,7 @@ body{
 
 .modeBox{
   text-align:center;
-  padding:10px;
+  padding:8px;
   font-weight:bold;
 }
 
@@ -46,7 +46,6 @@ button{
 
 .masuk{background:#22c55e;color:white;}
 .keluar{background:#ef4444;color:white;}
-.reset{background:#f59e0b;color:white;}
 
 #reader{
   width:100%;
@@ -66,15 +65,13 @@ button{
 
 <div class="header">📦 GUDANG SCAN PRO</div>
 
-<!-- MODE INDICATOR -->
 <div class="modeBox">
-MODE: <span id="modeText" style="color:#f59e0b;">BELUM PILIH</span>
+MODE: <span id="modeText">BELUM PILIH</span>
 </div>
 
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
   <button class="keluar" onclick="setAksi('KELUAR')">KELUAR</button>
-  <button class="reset" onclick="resetScanner()">RESET</button>
 </div>
 
 <div id="reader"></div>
@@ -85,65 +82,74 @@ MODE: <span id="modeText" style="color:#f59e0b;">BELUM PILIH</span>
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
 
-let html5QrCode;
 let aksi = null;
-let isLocked = false;
+let lock = false;
 let lastCode = "";
 let lastTime = 0;
 
-/* SET MODE */
+/* MODE */
 function setAksi(a){
   aksi = a;
-
-  let color = "#f59e0b";
-  if(a === "MASUK") color = "#22c55e";
-  if(a === "KELUAR") color = "#ef4444";
-
   document.getElementById("modeText").innerText = a;
-  document.getElementById("modeText").style.color = color;
 }
 
-/* START SCANNER (KAMERA BELAKANG) */
-function startScanner(){
+/* SCAN (VERSI PALING STABIL) */
+function onScanSuccess(decodedText){
 
-  html5QrCode = new Html5Qrcode("reader");
+  const now = Date.now();
 
-  Html5Qrcode.getCameras().then(cameras => {
+  if(lock) return;
 
-    if(!cameras || cameras.length === 0){
-      alert("Camera tidak ditemukan");
-      return;
-    }
+  if(decodedText === lastCode && (now - lastTime) < 3000){
+    return;
+  }
 
-    let cameraId = cameras[0].id;
+  lastCode = decodedText;
+  lastTime = now;
 
-    for(let i = 0; i < cameras.length; i++){
-      const label = cameras[i].label.toLowerCase();
+  if(!aksi){
+    alert("Pilih MASUK / KELUAR dulu");
+    return;
+  }
 
-      if(label.includes("back") || label.includes("rear") || label.includes("belakang")){
-        cameraId = cameras[i].id;
-        break;
-      }
-    }
+  lock = true;
 
-    html5QrCode.start(
-      cameraId,
-      { fps: 10, qrbox: 250 },
-      onScanSuccess
-    );
+  document.getElementById("hasil").innerText = decodedText;
 
-  }).catch(err => {
-    alert("Camera error: " + err);
+  fetch(GAS_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      barcode: decodedText,
+      aksi: aksi,
+      qty: 1,
+      tipe: "barang"
+    })
+  })
+  .then(res => res.text())
+  .then(res => {
+
+    document.getElementById("hasil").innerText = res;
+
+    setTimeout(()=>{
+      lock = false;
+    }, 1500);
+
+  })
+  .catch(()=>{
+    lock = false;
   });
 
 }
 
-/* RESET TANPA FREEZE */
-function resetScanner(){
+/* START SCANNER (JANGAN DIUBAH LAGI) */
+let scanner = new Html5QrcodeScanner(
+  "reader",
+  { fps: 10, qrbox: 250 }
+);
 
-  document.getElementById("hasil").innerText = "Reset Scanner...";
+scanner.render(onScanSuccess);
 
-  try{
-    html5QrCode.stop().then(() => {
-      html5QrCode.clear();
-      startScanner();
+</script>
+
+</body>
+</html>
