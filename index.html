@@ -58,7 +58,7 @@ button{
 
 <body>
 
-<div class="header">📦 GUDANG SCAN</div>
+<div class="header">📦 GUDANG SCAN PRO</div>
 
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
@@ -80,12 +80,12 @@ let isLocked = false;
 let lastCode = "";
 let lastTime = 0;
 
-/* MODE */
+/* SET AKSI */
 function setAksi(a){
   aksi = a;
 }
 
-/* START SCANNER (STABLE MODE) */
+/* START SCANNER (FORCE BACK CAMERA) */
 function startScanner(){
 
   html5QrCode = new Html5Qrcode("reader");
@@ -97,8 +97,20 @@ function startScanner(){
       return;
     }
 
+    let cameraId = cameras[0].id;
+
+    // 🔥 paksa kamera belakang
+    for(let i = 0; i < cameras.length; i++){
+      const label = cameras[i].label.toLowerCase();
+
+      if(label.includes("back") || label.includes("rear") || label.includes("belakang")){
+        cameraId = cameras[i].id;
+        break;
+      }
+    }
+
     html5QrCode.start(
-      cameras[0].id,
+      cameraId,
       {
         fps: 10,
         qrbox: 250
@@ -106,11 +118,13 @@ function startScanner(){
       onScanSuccess
     );
 
+  }).catch(err => {
+    alert("Camera error: " + err);
   });
 
 }
 
-/* RESET ANTI FREEZE (STOP + START ULANG) */
+/* RESET (ANTI FREEZE) */
 function resetScanner(){
 
   document.getElementById("hasil").innerText = "Reset Scanner...";
