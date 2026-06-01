@@ -41,6 +41,10 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbtt
 
 function onScanSuccess(decodedText){
 
+  alert("SCAN: " + decodedText);
+
+}
+
   document.getElementById("hasil").innerHTML = decodedText;
 
  fetch(GAS_URL,{
