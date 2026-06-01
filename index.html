@@ -51,14 +51,6 @@ function onScanSuccess(decodedText){
     body:JSON.stringify({
       barcode:decodedText
     })
-  })
-  .then(r => r.text())
-  .then(res => {
-    alert("Berhasil: " + res);
-  })
-  .catch(err => {
-    alert("Error: " + err);
   });
 
 }
-</html>
