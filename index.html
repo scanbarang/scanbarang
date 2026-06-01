@@ -4,7 +4,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Gudang Scan Pro</title>
+<title>Gudang Scan</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -26,7 +26,7 @@ body{
 
 .modeBox{
   text-align:center;
-  padding:8px;
+  padding:10px;
   font-weight:bold;
 }
 
@@ -49,13 +49,12 @@ button{
 
 #reader{
   width:100%;
-  height:55vh;
+  height:60vh;
 }
 
 .result{
   text-align:center;
   padding:10px;
-  font-size:14px;
 }
 
 </style>
@@ -64,23 +63,19 @@ button{
 
 <body>
 
-<div class="header">📦 GUDANG SCAN PRO</div>
+<div class="header">📦 GUDANG SCAN</div>
 
-<!-- MODE -->
 <div class="modeBox">
 MODE: <span id="modeText" style="color:#f59e0b;">BELUM PILIH</span>
 </div>
 
-<!-- BUTTON -->
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
   <button class="keluar" onclick="setAksi('KELUAR')">KELUAR</button>
 </div>
 
-<!-- SCANNER -->
 <div id="reader"></div>
 
-<!-- RESULT -->
 <div class="result" id="hasil">Siap Scan</div>
 
 <script>
@@ -88,9 +83,9 @@ MODE: <span id="modeText" style="color:#f59e0b;">BELUM PILIH</span>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
 
 let aksi = null;
-let lock = false;
 let lastCode = "";
 let lastTime = 0;
+let lock = false;
 
 /* MODE */
 function setAksi(a){
@@ -104,7 +99,7 @@ function setAksi(a){
   document.getElementById("modeText").style.color = color;
 }
 
-/* SCAN */
+/* SCAN SIMPLE (INI YANG TADI ENAK) */
 function onScanSuccess(decodedText){
 
   const now = Date.now();
@@ -127,49 +122,32 @@ function onScanSuccess(decodedText){
 
   document.getElementById("hasil").innerText = decodedText;
 
-  scanner.pause();
-
-  setTimeout(() => {
-
-    const ok = confirm("Barcode: " + decodedText + "\nMode: " + aksi);
-
-    if(!ok){
-      scanner.resume();
-      lock = false;
-      return;
-    }
-
-    fetch(GAS_URL,{
-      method:"POST",
-      body:JSON.stringify({
-        barcode: decodedText,
-        aksi: aksi,
-        qty: 1,
-        tipe: "barang"
-      })
+  fetch(GAS_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      barcode: decodedText,
+      aksi: aksi,
+      qty: 1,
+      tipe: "barang"
     })
-    .then(res => res.text())
-    .then(res => {
+  })
+  .then(res => res.text())
+  .then(res => {
 
-      alert(res);
+    document.getElementById("hasil").innerText = res;
 
-      scanner.resume();
-
-      setTimeout(()=>{
-        lock = false;
-      },1500);
-
-    })
-    .catch(()=>{
-      scanner.resume();
+    setTimeout(()=>{
       lock = false;
-    });
+    }, 1500);
 
-  },200);
+  })
+  .catch(()=>{
+    lock = false;
+  });
 
 }
 
-/* START */
+/* SCANNER ORIGINAL (JANGAN DIUTAK-ATIK LAGI) */
 let scanner = new Html5QrcodeScanner(
   "reader",
   { fps: 10, qrbox: 250 }
