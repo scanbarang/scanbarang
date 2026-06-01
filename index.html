@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Gudang Scan Pro</title>
 
@@ -12,7 +12,7 @@
 
 body{
   margin:0;
-  font-family: Arial;
+  font-family:Arial;
   background:#0b1220;
   color:white;
 }
@@ -21,18 +21,6 @@ body{
   background:#111827;
   padding:12px;
   text-align:center;
-  font-weight:bold;
-  font-size:18px;
-}
-
-.mode{
-  text-align:center;
-  margin:10px;
-  font-size:16px;
-}
-
-.mode span{
-  color:#22c55e;
   font-weight:bold;
 }
 
@@ -54,16 +42,12 @@ button{
 .keluar{background:#ef4444;color:white;}
 .reset{background:#f59e0b;color:white;}
 
-#reader{
-  width:100%;
-  margin-top:10px;
-}
+#reader{width:100%;}
 
 .result{
   text-align:center;
-  padding:15px;
-  font-size:18px;
-  color:#38bdf8;
+  padding:10px;
+  font-size:16px;
 }
 
 </style>
@@ -72,41 +56,18 @@ button{
 
 <body>
 
-<div class="header">📦 GUDANG SCAN PRO</div>
-
-<div class="mode">
-MODE: <span id="modeText">BELUM PILIH</span>
-</div>
+<div class="header">📦 GUDANG SCAN</div>
 
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
   <button class="keluar" onclick="setAksi('KELUAR')">KELUAR</button>
-  <button class="reset" onclick="location.reload()">RESET</button>
+  <button class="reset" onclick="resetScanner()">RESET</button>
 </div>
 
 <div id="reader"></div>
 
-<div class="result" id="hasil">Siap Scan...</div>
+<div class="result" id="hasil">Siap Scan</div>
 
 <script>
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
-
-let aksi = null;
-let isLocked = false;
-let lastCode = "";
-let lastTime = 0;
-let scanner;
-
-/* SET MODE MASUK / KELUAR */
-function setAksi(a){
-  aksi = a;
-  document.getElementById("modeText").innerText = a;
-}
-
-/* SCAN */
-function onScanSuccess(decodedText){
-
-  const now = Date.now();
-
-  if(isLocked) return;
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJ
