@@ -24,6 +24,12 @@ body{
   font-weight:bold;
 }
 
+.modeBox{
+  text-align:center;
+  padding:10px;
+  font-weight:bold;
+}
+
 .panel{
   display:flex;
   gap:5px;
@@ -60,6 +66,11 @@ button{
 
 <div class="header">📦 GUDANG SCAN PRO</div>
 
+<!-- MODE INDICATOR -->
+<div class="modeBox">
+MODE: <span id="modeText" style="color:#f59e0b;">BELUM PILIH</span>
+</div>
+
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
   <button class="keluar" onclick="setAksi('KELUAR')">KELUAR</button>
@@ -80,12 +91,19 @@ let isLocked = false;
 let lastCode = "";
 let lastTime = 0;
 
-/* SET AKSI */
+/* SET MODE */
 function setAksi(a){
   aksi = a;
+
+  let color = "#f59e0b";
+  if(a === "MASUK") color = "#22c55e";
+  if(a === "KELUAR") color = "#ef4444";
+
+  document.getElementById("modeText").innerText = a;
+  document.getElementById("modeText").style.color = color;
 }
 
-/* START SCANNER (FORCE BACK CAMERA) */
+/* START SCANNER (KAMERA BELAKANG) */
 function startScanner(){
 
   html5QrCode = new Html5Qrcode("reader");
@@ -99,7 +117,6 @@ function startScanner(){
 
     let cameraId = cameras[0].id;
 
-    // 🔥 paksa kamera belakang
     for(let i = 0; i < cameras.length; i++){
       const label = cameras[i].label.toLowerCase();
 
@@ -111,10 +128,7 @@ function startScanner(){
 
     html5QrCode.start(
       cameraId,
-      {
-        fps: 10,
-        qrbox: 250
-      },
+      { fps: 10, qrbox: 250 },
       onScanSuccess
     );
 
@@ -124,7 +138,7 @@ function startScanner(){
 
 }
 
-/* RESET (ANTI FREEZE) */
+/* RESET TANPA FREEZE */
 function resetScanner(){
 
   document.getElementById("hasil").innerText = "Reset Scanner...";
@@ -133,73 +147,3 @@ function resetScanner(){
     html5QrCode.stop().then(() => {
       html5QrCode.clear();
       startScanner();
-      document.getElementById("hasil").innerText = "Siap Scan";
-    });
-  }catch(e){
-    startScanner();
-  }
-
-}
-
-/* SCAN */
-function onScanSuccess(decodedText){
-
-  const now = Date.now();
-
-  if(isLocked) return;
-
-  if(decodedText === lastCode && (now - lastTime) < 3000){
-    return;
-  }
-
-  lastCode = decodedText;
-  lastTime = now;
-
-  if(!aksi){
-    alert("Pilih MASUK / KELUAR dulu");
-    return;
-  }
-
-  isLocked = true;
-
-  document.getElementById("hasil").innerText = decodedText;
-
-  const ok = confirm("Barcode: " + decodedText + "\nAksi: " + aksi);
-
-  if(!ok){
-    isLocked = false;
-    return;
-  }
-
-  fetch(GAS_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      barcode: decodedText,
-      aksi: aksi,
-      qty: 1,
-      tipe: "barang"
-    })
-  })
-  .then(res => res.text())
-  .then(res => {
-
-    alert(res);
-
-    setTimeout(()=>{
-      isLocked = false;
-    },2000);
-
-  })
-  .catch(()=>{
-    isLocked = false;
-  });
-
-}
-
-/* INIT */
-window.onload = startScanner;
-
-</script>
-
-</body>
-</html>
