@@ -8,7 +8,6 @@
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b1220">
 
@@ -98,3 +97,39 @@ button{
 <body>
 
 <div class="header">📦 GUDANG SCAN PRO</div>
+
+<div class="mode">
+MODE: <span id="mode">MASUK</span>
+</div>
+
+<div class="panel">
+  <button class="in" onclick="setMode('MASUK')">MASUK</button>
+  <button class="out" onclick="setMode('KELUAR')">KELUAR</button>
+  <button class="reset" onclick="location.reload()">RESET</button>
+</div>
+
+<div id="reader"></div>
+
+<div class="result" id="hasil">Siap Scan Barang</div>
+
+<div class="footer">Scan System Pro • Stable Version</div>
+
+<script>
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
+
+let mode = "MASUK";
+let isLocked = false;
+
+/* MODE */
+function setMode(m){
+  mode = m;
+  document.getElementById("mode").innerText = m;
+}
+
+/* SCAN FUNCTION (ANTI DOUBLE + STABLE) */
+function onScanSuccess(decodedText){
+
+  if(isLocked) return;
+
+  isLocked = true; // LOCK langsung
