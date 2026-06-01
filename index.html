@@ -1,37 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scan Barang</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  padding:15px;
+}
+
+#reader{
+  width:100%;
+  max-width:500px;
+  margin:auto;
+}
+
+#hasil{
+  margin-top:15px;
+  font-size:22px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>SCAN BARANG KELUAR</h2>
+
+<div id="reader"></div>
+
+<div id="hasil"></div>
+
 <script>
 
-const GAS_URL =
-"https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
 
 function onScanSuccess(decodedText){
 
-  document.getElementById("hasil")
-    .innerHTML = decodedText;
+  document.getElementById("hasil").innerHTML = decodedText;
 
   fetch(GAS_URL,{
     method:"POST",
     body:JSON.stringify({
       barcode:decodedText
     })
-  })
-  .then(r => r.text())
-  .then(res => {
-    console.log(res);
-  })
-  .catch(err => {
-    console.log(err);
   });
 
 }
 
 const scanner = new Html5QrcodeScanner(
-"reader",
-{
-fps:10,
-qrbox:250
-}
+  "reader",
+  {
+    fps:10,
+    qrbox:250
+  }
 );
 
 scanner.render(onScanSuccess);
 
 </script>
+
+</body>
+</html>
