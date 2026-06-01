@@ -8,23 +8,13 @@
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b1220">
-
 <style>
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: Arial;
-}
-
 body{
+  margin:0;
+  font-family: Arial;
   background:#0b1220;
   color:white;
-  height:100vh;
-  overflow:hidden;
 }
 
 .header{
@@ -48,27 +38,25 @@ body{
 
 .panel{
   display:flex;
-  justify-content:space-around;
-  margin:10px;
+  gap:5px;
+  padding:10px;
 }
 
 button{
   flex:1;
-  margin:5px;
-  padding:15px;
+  padding:12px;
   border:none;
-  border-radius:10px;
-  font-size:16px;
+  border-radius:8px;
   font-weight:bold;
 }
 
-.in{ background:#22c55e; color:white; }
-.out{ background:#ef4444; color:white; }
-.reset{ background:#f59e0b; color:white; }
+.masuk{background:#22c55e;color:white;}
+.keluar{background:#ef4444;color:white;}
+.reset{background:#f59e0b;color:white;}
 
 #reader{
   width:100%;
-  height:55vh;
+  margin-top:10px;
 }
 
 .result{
@@ -76,18 +64,6 @@ button{
   padding:15px;
   font-size:18px;
   color:#38bdf8;
-  font-weight:bold;
-}
-
-.footer{
-  position:absolute;
-  bottom:0;
-  width:100%;
-  background:#111827;
-  padding:10px;
-  text-align:center;
-  font-size:12px;
-  color:#9ca3af;
 }
 
 </style>
@@ -99,20 +75,18 @@ button{
 <div class="header">📦 GUDANG SCAN PRO</div>
 
 <div class="mode">
-STATUS: <span id="status">SCAN</span>
+MODE: <span id="modeText">BELUM PILIH</span>
 </div>
 
 <div class="panel">
-  <button class="in" onclick="setAksi('MASUK')">MASUK</button>
-  <button class="out" onclick="setAksi('KELUAR')">KELUAR</button>
+  <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
+  <button class="keluar" onclick="setAksi('KELUAR')">KELUAR</button>
   <button class="reset" onclick="location.reload()">RESET</button>
 </div>
 
 <div id="reader"></div>
 
-<div class="result" id="hasil">Siap Scan Barang</div>
-
-<div class="footer">Scan System Pro • Flow Master</div>
+<div class="result" id="hasil">Siap Scan...</div>
 
 <script>
 
@@ -122,11 +96,12 @@ let aksi = null;
 let isLocked = false;
 let lastCode = "";
 let lastTime = 0;
+let scanner;
 
-/* SET AKSI */
+/* SET MODE MASUK / KELUAR */
 function setAksi(a){
   aksi = a;
-  document.getElementById("status").innerText = "TRANSAKSI: " + a;
+  document.getElementById("modeText").innerText = a;
 }
 
 /* SCAN */
@@ -135,70 +110,3 @@ function onScanSuccess(decodedText){
   const now = Date.now();
 
   if(isLocked) return;
-
-  if(decodedText === lastCode && (now - lastTime) < 3000){
-    return;
-  }
-
-  lastCode = decodedText;
-  lastTime = now;
-
-  isLocked = true;
-
-  document.getElementById("hasil").innerText = decodedText;
-
-  const ok = confirm(
-    "BARCODE: " + decodedText +
-    "\n\nLanjut proses?"
-  );
-
-  if(!ok){
-    isLocked = false;
-    return;
-  }
-
-  fetch(GAS_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      barcode: decodedText,
-      aksi: aksi,
-      tipe: "barang",
-      qty: 1
-    })
-  })
-  .then(res => res.text())
-  .then(res => {
-
-    alert(res);
-
-    setTimeout(() => {
-      isLocked = false;
-    }, 2000);
-
-  })
-  .catch(() => {
-    isLocked = false;
-  });
-
-}
-
-/* START SCANNER */
-let scanner = new Html5QrcodeScanner(
-  "reader",
-  {
-    fps: 5,
-    qrbox: 250
-  }
-);
-
-scanner.render(onScanSuccess);
-
-/* PWA */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-
-</script>
-
-</body>
-</html>
