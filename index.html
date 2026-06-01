@@ -93,3 +93,112 @@ button{
 </style>
 
 </head>
+
+<body>
+
+<div class="header">📦 GUDANG SCAN PRO</div>
+
+<div class="mode">
+STATUS: <span id="status">SCAN</span>
+</div>
+
+<div class="panel">
+  <button class="in" onclick="setAksi('MASUK')">MASUK</button>
+  <button class="out" onclick="setAksi('KELUAR')">KELUAR</button>
+  <button class="reset" onclick="location.reload()">RESET</button>
+</div>
+
+<div id="reader"></div>
+
+<div class="result" id="hasil">Siap Scan Barang</div>
+
+<div class="footer">Scan System Pro • Flow Master</div>
+
+<script>
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
+
+let aksi = null;
+let isLocked = false;
+let lastCode = "";
+let lastTime = 0;
+
+/* SET AKSI */
+function setAksi(a){
+  aksi = a;
+  document.getElementById("status").innerText = "TRANSAKSI: " + a;
+}
+
+/* SCAN */
+function onScanSuccess(decodedText){
+
+  const now = Date.now();
+
+  if(isLocked) return;
+
+  if(decodedText === lastCode && (now - lastTime) < 3000){
+    return;
+  }
+
+  lastCode = decodedText;
+  lastTime = now;
+
+  isLocked = true;
+
+  document.getElementById("hasil").innerText = decodedText;
+
+  const ok = confirm(
+    "BARCODE: " + decodedText +
+    "\n\nLanjut proses?"
+  );
+
+  if(!ok){
+    isLocked = false;
+    return;
+  }
+
+  fetch(GAS_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      barcode: decodedText,
+      aksi: aksi,
+      tipe: "barang",
+      qty: 1
+    })
+  })
+  .then(res => res.text())
+  .then(res => {
+
+    alert(res);
+
+    setTimeout(() => {
+      isLocked = false;
+    }, 2000);
+
+  })
+  .catch(() => {
+    isLocked = false;
+  });
+
+}
+
+/* START SCANNER */
+let scanner = new Html5QrcodeScanner(
+  "reader",
+  {
+    fps: 5,
+    qrbox: 250
+  }
+);
+
+scanner.render(onScanSuccess);
+
+/* PWA */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+</script>
+
+</body>
+</html>
