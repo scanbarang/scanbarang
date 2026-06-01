@@ -42,12 +42,14 @@ button{
 .keluar{background:#ef4444;color:white;}
 .reset{background:#f59e0b;color:white;}
 
-#reader{width:100%;}
+#reader{
+  width:100%;
+  height:60vh;
+}
 
 .result{
   text-align:center;
   padding:10px;
-  font-size:16px;
 }
 
 </style>
@@ -56,7 +58,7 @@ button{
 
 <body>
 
-<div class="header">📦 GUDANG UFO KEBONSARI</div>
+<div class="header">📦 GUDANG SCAN</div>
 
 <div class="panel">
   <button class="masuk" onclick="setAksi('MASUK')">MASUK</button>
@@ -70,4 +72,120 @@ button{
 
 <script>
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJ
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwYffqJQxmZ9Y8PyYIPPbttmNaGdKiOrpm0raE87T-eJo2SFkH_VJVUB2Kql1G2X_3oBQ/exec";
+
+let html5QrCode;
+let aksi = null;
+let isLocked = false;
+let lastCode = "";
+let lastTime = 0;
+
+/* MODE */
+function setAksi(a){
+  aksi = a;
+}
+
+/* START SCANNER (STABLE MODE) */
+function startScanner(){
+
+  html5QrCode = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(cameras => {
+
+    if(!cameras || cameras.length === 0){
+      alert("Camera tidak ditemukan");
+      return;
+    }
+
+    html5QrCode.start(
+      cameras[0].id,
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      onScanSuccess
+    );
+
+  });
+
+}
+
+/* RESET ANTI FREEZE (STOP + START ULANG) */
+function resetScanner(){
+
+  document.getElementById("hasil").innerText = "Reset Scanner...";
+
+  try{
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      startScanner();
+      document.getElementById("hasil").innerText = "Siap Scan";
+    });
+  }catch(e){
+    startScanner();
+  }
+
+}
+
+/* SCAN */
+function onScanSuccess(decodedText){
+
+  const now = Date.now();
+
+  if(isLocked) return;
+
+  if(decodedText === lastCode && (now - lastTime) < 3000){
+    return;
+  }
+
+  lastCode = decodedText;
+  lastTime = now;
+
+  if(!aksi){
+    alert("Pilih MASUK / KELUAR dulu");
+    return;
+  }
+
+  isLocked = true;
+
+  document.getElementById("hasil").innerText = decodedText;
+
+  const ok = confirm("Barcode: " + decodedText + "\nAksi: " + aksi);
+
+  if(!ok){
+    isLocked = false;
+    return;
+  }
+
+  fetch(GAS_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      barcode: decodedText,
+      aksi: aksi,
+      qty: 1,
+      tipe: "barang"
+    })
+  })
+  .then(res => res.text())
+  .then(res => {
+
+    alert(res);
+
+    setTimeout(()=>{
+      isLocked = false;
+    },2000);
+
+  })
+  .catch(()=>{
+    isLocked = false;
+  });
+
+}
+
+/* INIT */
+window.onload = startScanner;
+
+</script>
+
+</body>
+</html>
